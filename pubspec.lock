@@ -9,6 +9,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.11.0"
+  audio_streamer:
+    dependency: "direct main"
+    description:
+      name: audio_streamer
+      sha256: ddf5f56d3866a9faa466db96c3c003ec4a5933c5bb107135f6712c9212aa4012
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.1.1"
   boolean_selector:
     dependency: transitive
     description:
@@ -136,14 +144,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.15.0"
-  mic_stream:
-    dependency: "direct main"
-    description:
-      name: mic_stream
-      sha256: "1db1ec77bdd8ffc0d1c5cc606398612930312a96462220add5ea24aa9da73210"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.7.1+2"
   path:
     dependency: transitive
     description:

@@ -1,28 +1,28 @@
 PODS:
-  - Flutter (1.0.0)
-  - mic_stream (0.0.1):
+  - audio_streamer (0.0.1):
     - Flutter
+  - Flutter (1.0.0)
   - permission_handler_apple (9.3.0):
     - Flutter
 
 DEPENDENCIES:
+  - audio_streamer (from `.symlinks/plugins/audio_streamer/ios`)
   - Flutter (from `Flutter`)
-  - mic_stream (from `.symlinks/plugins/mic_stream/ios`)
   - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
 
 EXTERNAL SOURCES:
+  audio_streamer:
+    :path: ".symlinks/plugins/audio_streamer/ios"
   Flutter:
     :path: Flutter
-  mic_stream:
-    :path: ".symlinks/plugins/mic_stream/ios"
   permission_handler_apple:
     :path: ".symlinks/plugins/permission_handler_apple/ios"
 
 SPEC CHECKSUMS:
+  audio_streamer: af49e73eb66f71c4eeabb4bbcb05f122d03a6709
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
-  mic_stream: 28787bfcfcfc68e17fad15050baf5929f1d10901
   permission_handler_apple: 9878588469a2b0d0fc1e048d9f43605f92e6cec2
 
-PODFILE CHECKSUM: 41f71384cbead587d01835e4e23fae94f84672d8
+PODFILE CHECKSUM: 22b37510d910a2b1f1db2743f9cd46f62a47c118
 
 COCOAPODS: 1.15.2
