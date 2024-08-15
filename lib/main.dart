@@ -6,11 +6,14 @@ import 'package:audio_streamer/audio_streamer.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:quantum_wave/wave_painter.dart';
 
+import 'consts/guitar_notes.dart';
 import 'fft.dart';
 
-void main() => runApp(new AudioStreamingApp());
+void main() => runApp(const AudioStreamingApp());
 
 class AudioStreamingApp extends StatefulWidget {
+  const AudioStreamingApp({super.key});
+
   @override
   AudioStreamingAppState createState() => AudioStreamingAppState();
 }
@@ -23,14 +26,6 @@ class AudioStreamingAppState extends State<AudioStreamingApp> {
   List<double> samples = [];
   double? recordingTime;
   StreamSubscription<List<double>>? audioSubscription;
-  Map<String, double> guitarNotes = {
-    'E(E4)': 329.63,
-    'B(B3)': 246.94,
-    'G(G3)': 196.00,
-    'D(D3)': 146.83,
-    'A(A2)': 110.00,
-    'E(E2)': 82.41,
-  };
 
   /// Check if microphone permission is granted.
   Future<bool> checkPermission() async => await Permission.microphone.isGranted;
@@ -130,92 +125,6 @@ class AudioStreamingAppState extends State<AudioStreamingApp> {
   void stop() async {
     audioSubscription?.cancel();
     setState(() => isRecording = false);
-  }
-
-  // utils for pitch detection!!!
-  List<double> autocorrelate(List<double> signal) {
-    int n = signal.length;
-    List<double> autocorrelation = List.filled(n, 0.0);
-
-    for (int lag = 0; lag < n; lag++) {
-      double sum = 0.0;
-      for (int i = 0; i < n - lag; i++) {
-        sum += signal[i] * signal[i + lag];
-      }
-      autocorrelation[lag] = sum;
-    }
-    return autocorrelation;
-  }
-
-  int findPeak(List<double> autocorrelation) {
-    int peakIndex = 0;
-    double maxValue = 0.0;
-
-    for (int i = 1; i < autocorrelation.length; i++) {
-      if (autocorrelation[i] > maxValue) {
-        maxValue = autocorrelation[i];
-        peakIndex = i;
-      }
-    }
-
-    return peakIndex;
-  }
-
-  double lagToFrequency(int lag, double sampleRate) {
-    if (lag == 0) return 0.0;
-    return sampleRate / lag;
-  }
-
-  void processAudio(List<double> buffer, double sampleRate) {
-    // Apply autocorrelation to the audio buffer
-    List<double> autocorrelation = autocorrelate(buffer);
-
-    // Find the peak in the autocorrelation
-    int peakLag = findPeak(autocorrelation);
-
-    // Convert lag to frequency
-    double frequency = lagToFrequency(peakLag, sampleRate);
-
-    // Map frequency to note
-    String note = frequencyToNote(frequency);
-
-    print("Detected frequency: $frequency Hz");
-    print("Detected note: $note");
-  }
-
-  String frequencyToNote(double frequency) {
-    // Implement frequency to note conversion logic
-    // This example assumes standard tuning notes
-    const tuningFrequencies = {
-      "E2": 82.41,
-      "A2": 110.00,
-      "D3": 146.83,
-      "G3": 196.00,
-      "B3": 246.94,
-      "E4": 329.63
-    };
-
-    String closestNote = "Unknown";
-    double closestDiff = double.infinity;
-
-    tuningFrequencies.forEach((note, freq) {
-      double diff = (frequency - freq).abs();
-      if (diff < closestDiff) {
-        closestDiff = diff;
-        closestNote = note;
-      }
-    });
-
-    return closestNote;
-  }
-
-  List<double> applyHammingWindow(List<double> signal) {
-    int n = signal.length;
-    List<double> windowedSignal = List.filled(n, 0.0);
-    for (int i = 0; i < n; i++) {
-      windowedSignal[i] = signal[i] * (0.54 - 0.46 * cos(2 * pi * i / (n - 1)));
-    }
-    return windowedSignal;
   }
 
   @override

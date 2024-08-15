@@ -37,7 +37,7 @@ class WavePainter extends CustomPainter {
 class WaveAnimation extends StatefulWidget {
   final List<double> samples;
 
-  WaveAnimation({required this.samples});
+  const WaveAnimation({super.key, required this.samples});
 
   @override
   _WaveAnimationState createState() => _WaveAnimationState();
@@ -72,7 +72,7 @@ class _WaveAnimationState extends State<WaveAnimation>
   Widget build(BuildContext context) {
     return CustomPaint(
       painter: WavePainter(samples),
-      size: Size(double.infinity, 200),
+      size: const Size(double.infinity, 200),
     );
   }
 }
