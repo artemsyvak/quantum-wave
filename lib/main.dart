@@ -24,12 +24,12 @@ class AudioStreamingAppState extends State<AudioStreamingApp> {
   double? recordingTime;
   StreamSubscription<List<double>>? audioSubscription;
   Map<String, double> guitarNotes = {
-    'E4': 329.63,
-    'A4': 440.00,
-    'D5': 587.33,
-    'G5': 783.99,
-    'B5': 987.77,
-    'E6': 1318.51,
+    'E(E4)': 329.63,
+    'B(B3)': 246.94,
+    'G(G3)': 196.00,
+    'D(D3)': 146.83,
+    'A(A2)': 110.00,
+    'E(E2)': 82.41,
   };
 
   /// Check if microphone permission is granted.
@@ -39,16 +39,13 @@ class AudioStreamingAppState extends State<AudioStreamingApp> {
   Future<void> requestPermission() async =>
       await Permission.microphone.request();
 
-  Timer? _throttleTimer;
-
   // Call-back on audio data.
   void onAudio(List<double> buffer) async {
     FFT fft = FFT();
     List<Complex> result =
         fft.fft(buffer.map((value) => Complex(value, 0.0)).toList());
 
-    // double samplingRate = 44100.0; // Adjust this according to your setup
-    double samplingRate = (await AudioStreamer().actualSampleRate) + .0;  // Adjust this according to your setup
+    double samplingRate = (await AudioStreamer().actualSampleRate) + .0;
     int N = result.length;
 
     // Find the frequency with the maximum magnitude
@@ -65,42 +62,42 @@ class AudioStreamingAppState extends State<AudioStreamingApp> {
 
     double dominantFrequency = maxIndex * samplingRate / N;
 
-    // Find the closest guitar note
+    String closestNote = findClosestGuitarNote(dominantFrequency);
+
+    print('Dominant Frequency: $dominantFrequency Hz');
+    print('Closest Guitar Note: $closestNote');
+
+    int chunkSize = 256;
+    for (int i = 0; i < buffer.length; i += chunkSize) {
+      List<double> chunk = buffer.sublist(
+          i, i + chunkSize > buffer.length ? buffer.length : i + chunkSize);
+
+      double minValue = chunk.reduce(min);
+      double maxValue = chunk.reduce(max);
+
+      setState(() {
+        latestBuffer = chunk;
+        samples = latestBuffer!
+            .map((value) => (value - minValue) / (maxValue - minValue))
+            .toList();
+      });
+    }
+  }
+
+// Find the closest guitar note
+  String findClosestGuitarNote(double frequency) {
     String closestNote = '';
     double minDifference = double.infinity;
 
-    guitarNotes.forEach((note, frequency) {
-      double difference = (frequency - dominantFrequency).abs();
+    guitarNotes.forEach((note, noteFrequency) {
+      double difference = (noteFrequency - frequency).abs();
       if (difference < minDifference) {
         minDifference = difference;
         closestNote = note;
       }
     });
 
-    print('Dominant Frequency: $dominantFrequency Hz');
-    print('Closest Guitar Note: $closestNote');
-
-    if (_throttleTimer != null && _throttleTimer!.isActive) {
-      return;
-    }
-
-    _throttleTimer = Timer(Duration(microseconds: 10), () {
-      int chunkSize = 256;
-      for (int i = 0; i < buffer.length; i += chunkSize) {
-        List<double> chunk = buffer.sublist(
-            i, i + chunkSize > buffer.length ? buffer.length : i + chunkSize);
-
-        double minValue = chunk.reduce(min);
-        double maxValue = chunk.reduce(max);
-
-        setState(() {
-          latestBuffer = chunk;
-          samples = latestBuffer!
-              .map((value) => (value - minValue) / (maxValue - minValue))
-              .toList();
-        });
-      }
-    });
+    return closestNote;
   }
 
   /// Call-back on error.
