@@ -12,15 +12,25 @@ class WavePainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
 
+
+    List<double> haichik = [];
+
+    for (int i = 0; i < samples.length; i++) {
+      if(i % 441 == 0){
+      haichik.add(samples[i]);
+      }
+    }
+
     final path = Path();
+    Animatable curve = CurveTween(curve: Curves.easeInOut);
     final midHeight = size.height / 2;
-    final widthStep = size.width / samples.length;
+    final widthStep = size.width / haichik.length;
 
     path.moveTo(0, midHeight);
 
-    for (int i = 0; i < samples.length; i++) {
+    for (int i = 0; i < haichik.length; i++) {
       final x = i * widthStep;
-      final y = midHeight - samples[i] * midHeight;
+      final y = midHeight - haichik[i] * midHeight;
       path.lineTo(x, y);
     }
 

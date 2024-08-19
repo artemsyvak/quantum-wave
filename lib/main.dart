@@ -6,6 +6,7 @@ import 'package:audio_streamer/audio_streamer.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:quantum_wave/wave_painter.dart';
 
+import 'consts/drum_notes.dart';
 import 'consts/guitar_notes.dart';
 import 'fft.dart';
 
@@ -26,6 +27,10 @@ class AudioStreamingAppState extends State<AudioStreamingApp> {
   List<double> samples = [];
   double? recordingTime;
   StreamSubscription<List<double>>? audioSubscription;
+  String currentGuitarNote = '';
+  String currentDrumInstrument = '';
+  String currentDrumNote = '';
+  double dominantFrequency = 0.0;
 
   /// Check if microphone permission is granted.
   Future<bool> checkPermission() async => await Permission.microphone.isGranted;
@@ -36,6 +41,13 @@ class AudioStreamingAppState extends State<AudioStreamingApp> {
 
   // Call-back on audio data.
   void onAudio(List<double> buffer) async {
+    print('hello');
+    print(buffer.length);
+     List<double> _generateWaveSamples() {
+    // Generate samples based on min/max amplitude
+    return List.generate(100, (index) => Random().nextDouble() * 2 - 1);
+  }
+    
     FFT fft = FFT();
     List<Complex> result =
         fft.fft(buffer.map((value) => Complex(value, 0.0)).toList());
@@ -60,23 +72,44 @@ class AudioStreamingAppState extends State<AudioStreamingApp> {
     String closestNote = findClosestGuitarNote(dominantFrequency);
 
     print('Dominant Frequency: $dominantFrequency Hz');
+    print('Low');
+    print(latestBuffer?.reduce(min));
+    print('Max');
+    print(latestBuffer?.reduce(max));
     print('Closest Guitar Note: $closestNote');
 
-    int chunkSize = 256;
-    for (int i = 0; i < buffer.length; i += chunkSize) {
-      List<double> chunk = buffer.sublist(
-          i, i + chunkSize > buffer.length ? buffer.length : i + chunkSize);
+    setState(() {
+      dominantFrequency = dominantFrequency;
+      currentGuitarNote = closestNote;
+    });
 
-      double minValue = chunk.reduce(min);
-      double maxValue = chunk.reduce(max);
+    findDrumBumAndNote(dominantFrequency);
 
-      setState(() {
-        latestBuffer = chunk;
-        samples = latestBuffer!
-            .map((value) => (value - minValue) / (maxValue - minValue))
-            .toList();
-      });
-    }
+    // Timer.periodic(Duration(milliseconds: 2000), (Timer timer) {
+
+      // if(!isRecording){
+      //   timer.cancel();
+      // }
+
+    // Timer.periodic(Duration(milliseconds: 400), (Timer timer) {
+    //   if (!isRecording) {
+    //     timer.cancel();
+    //   }
+      // int chunkSize = 256;     
+      // for (int i = 0; i < buffer.length; i += chunkSize) {
+      //   List<double> chunk = buffer.sublist(
+      //       i, i + chunkSize > buffer.length ? buffer.length : i + chunkSize);        
+      // }
+      double minValue = buffer.reduce(min);
+      double maxValue = buffer.reduce(max);
+
+        setState(() {
+          latestBuffer = buffer;
+          samples = latestBuffer!
+              .map((value) => (value - minValue) / (maxValue - minValue))
+              .toList();
+        });
+    // });
   }
 
 // Find the closest guitar note
@@ -93,6 +126,49 @@ class AudioStreamingAppState extends State<AudioStreamingApp> {
     });
 
     return closestNote;
+  }
+
+  String findDrumBumAndNote(double frequency) {
+    // Map to hold all drum instruments with their corresponding notes
+    final Map<String, Map<String, double>> drumInstruments = {
+      "Bass Drum": bassDrumNotes,
+      "Snare Drum": snareDrumNotes,
+      "High Tom": highTomNotes,
+      "Mid Tom": midTomNotes,
+      "Low Tom": lowTomNotes,
+      "Hi-Hat": hiHatNotes,
+      "Ride Cymbal": rideCymbalNotes,
+      "Crash Cymbal": crashCymbalNotes,
+      "China Cymbal": chinaCymbalNotes,
+      "Splash Cymbal": splashCymbalNotes,
+    };
+
+    String closestDrum = "Unknown";
+    String closestNote = "Unknown";
+    double minDiff = double.infinity;
+
+    // Iterate through each drum instrument
+    drumInstruments.forEach((drumInstrument, notes) {
+      // Iterate through each note in the current drum instrument
+      notes.forEach((note, noteFrequency) {
+        double diff = (frequency - noteFrequency).abs();
+        if (diff < minDiff) {
+          minDiff = diff;
+          closestDrum = drumInstrument;
+          closestNote = note;
+        }
+      });
+    });
+    String result =
+        "Drum Instrument: $closestDrum, Frequency: $frequency Hz, Closest Note: $closestNote";
+
+    setState(() {
+      currentDrumInstrument = closestDrum;
+      currentDrumNote = closestNote;
+    });
+
+    print(result);
+    return "Drum Instrument: $closestDrum, Frequency: $frequency Hz, Closest Note: $closestNote";
   }
 
   /// Call-back on error.
@@ -113,6 +189,8 @@ class AudioStreamingAppState extends State<AudioStreamingApp> {
 
     // Set the sampling rate - works only on Android.
     // AudioStreamer().sampleRate = 22100;
+    // AudioStreamer().sampleRate = 22100;
+    // AudioStreamer().sampleRate = 1000;
 
     // Start listening to the audio stream.
     audioSubscription =
@@ -150,7 +228,29 @@ class AudioStreamingAppState extends State<AudioStreamingApp> {
                           '${recordingTime?.toStringAsFixed(2)} seconds recorded.'),
                     ])),
                 Container(
+                  margin: const EdgeInsets.all(25),
+                  child: Text(
+                    'Guitar Note: ${currentGuitarNote}',
+                    style: const TextStyle(
+                        fontSize: 25, color: Colors.deepOrangeAccent),
+                  ),
+                ),
+                Container(
+                  margin: const EdgeInsets.all(25),
+                  child: Text(
+                    'Drum Instrument: ${currentDrumInstrument}',
+                    style: const TextStyle(
+                        fontSize: 18, color: Colors.deepOrangeAccent),
+                  ),
+                ),
+                Container(
                     margin: const EdgeInsets.all(25),
+                    // child: Text(
+                    //   '${currentDrumInstrument} Note: ${currentDrumNote}',
+                    //   style: const TextStyle(
+                    //       fontSize: 18, color: Colors.deepOrangeAccent),
+                    // ),
+                    // ),
                     child: WaveAnimation(
                       samples: samples,
                     )),
